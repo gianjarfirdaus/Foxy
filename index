@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Website Foxyria Rosetta</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; cursor: none !important; }
+    html { scroll-behavior: smooth; }
+    #custom-cursor { position: fixed; top: 0; left: 0; width: 35px; height: auto; pointer-events: none; z-index: 999999; }
+    
+    .navbar { position: fixed; top: 0; width: 100%; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; background: rgba(0, 0, 0, 0.7); z-index: 1000; transition: transform 0.4s ease-in-out; }
+    .navbar-hidden { transform: translateY(-100%); }
+    
+    /* NAV BRAND (Berisi Logo dan Tombol BGM) */
+    .nav-brand { display: flex; align-items: center; gap: 15px; }
+    .logo-nav { height: 40px; width: auto; }
+    .nav-music-btn { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); color: #fff; font-size: 18px; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer !important; transition: all 0.3s ease; }
+    .nav-music-btn:hover { background: rgba(76, 175, 80, 0.3); border-color: #4CAF50; transform: scale(1.1); }
+
+    .nav-links { display: flex; align-items: center; }
+    .navbar a { color: #fff; text-decoration: none; margin-left: 20px; font-weight: 500; }
+    .navbar a:hover { color: #4CAF50; }
+    .menu-toggle { display: none; font-size: 28px; color: #fff; }
+    
+    section { display: none; }
+    section.active { display: flex; }
+
+    /* KELAS UNTUK MENONAKTIFKAN KLIK SAAT AUDIO BERMAIN */
+    .disabled-nav { pointer-events: none; opacity: 0.5; }
+    
+    /* ========================================================= */
+    /* BAGIAN TENTANG (ABOUT) & INTERNAL VIEW SWITCHING          */
+    /* ========================================================= */
+    #about { 
+      height: 100vh; width: 100%; 
+      background-image: url('https://www.dropbox.com/scl/fi/whwq2mxk1du2uxdse9q9o/Adrenaline-2-.mp4_snapshot_01.23.959.jpg?rlkey=ggnk7a798azxagpvhzbgh254z&st=ibycnet7&raw=1'); 
+      background-size: cover; background-position: center; background-repeat: no-repeat;
+      position: relative; overflow: hidden;
+    }
+    
+    .about-view { display: none; width: 100%; height: 100%; }
+    .about-view.active-view { display: flex; }
+    
+    #about-main { position: relative; justify-content: center; align-items: center; flex-direction: column; }
+
+    .about-characters-container {
+      position: absolute; bottom: 0; width: 100%; height: 85vh;
+      display: flex; justify-content: center; align-items: flex-end;
+      gap: 35px; transform: translateX(-7%); z-index: 30; pointer-events: none;
+    }
+
+    .drake-wrapper { position: relative; display: flex; align-items: flex-end; pointer-events: auto; cursor: pointer !important; transition: transform 0.3s ease; }
+    .drake-wrapper:hover { transform: scale(1.03); }
+
+    .about-signature { position: absolute; top: 46%; left: -45px; width: 220px; height: auto; z-index: 35; pointer-events: none; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); transition: all 0.4s ease; }
+    .drake-wrapper:hover .about-signature { filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.9)); animation: float 2s infinite ease-in-out; }
+
+    .foxy-wrapper { position: relative; display: flex; align-items: flex-end; pointer-events: auto; cursor: pointer !important; transition: transform 0.3s ease; }
+    .foxy-wrapper:hover { transform: scale(1.03); }
+
+    .foxy-signature { position: absolute; top: 38%; right: -110px; width: 200px; height: auto; z-index: 35; pointer-events: none; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); transition: all 0.4s ease; }
+    .foxy-wrapper:hover .foxy-signature { filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.9)); animation: float 2s infinite ease-in-out; }
+
+    .about-character-img { max-height: 85vh; width: auto; object-fit: contain; filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.9)); transition: transform 0.3s ease; }
+    .foxy-char { max-height: 75vh; }
+
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+    .about-center-logo { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); max-width: 320px; width: 30vw; height: auto; z-index: 40; pointer-events: none; filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.9)); }
+    
+    .sheet-view { background-color: #0b0b0e; position: relative; justify-content: center; align-items: center; padding-top: 80px; }
+    .sheet-img { max-width: 90vw; max-height: 85vh; object-fit: contain; filter: drop-shadow(0 10px 30px rgba(0,0,0,0.8)); }
+    
+    .back-btn { position: absolute; top: 95px; left: 40px; padding: 10px 22px; background: rgba(0, 0, 0, 0.8); color: #fff; border: 2px solid #4CAF50; border-radius: 30px; font-weight: bold; z-index: 100; cursor: pointer !important; transition: background 0.3s; }
+    .back-btn:hover { background: #4CAF50; }
+
+    .sheet-container { position: relative; display: inline-block; }
+    .comic-bubble { position: absolute; background: rgba(40, 70, 55, 0.88); backdrop-filter: blur(8px); border: 2px solid rgba(120, 200, 150, 0.6); color: #ffffff; padding: 14px 18px; border-radius: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); font-size: 13px; line-height: 1.4; z-index: 50; animation: bubbleCycle 20s infinite ease-in-out; }
+    .comic-bubble strong { color: #a3ffcb; display: block; margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .foxy-bubble-1 { top: 32%; left: 5%; width: 260px; text-align: left; animation-delay: 0s; }
+    .foxy-bubble-2 { bottom: 5%; left: 35%; width: 250px; text-align: center; animation-delay: 2s; }
+    .foxy-bubble-3 { top: 18%; right: 5%; width: 260px; text-align: left; animation-delay: 1s; }
+    
+    .drake-bubble { background: rgba(40, 50, 70, 0.88); border: 2px solid rgba(120, 150, 200, 0.6); }
+    .drake-bubble strong { color: #a3ccff; }
+    
+    .drake-bubble-1 { top: 35%; left: 8%; width: 260px; text-align: left; animation-delay: 0s; }
+    .drake-bubble-2 { bottom: 12%; left: 40%; width: 220px; text-align: center; animation-delay: 2s; }
+    .drake-bubble-3 { top: 25%; right: 8%; width: 280px; text-align: left; animation-delay: 1s; }
+
+    @keyframes bubbleCycle { 0% { opacity: 1; transform: translateY(0); visibility: visible; } 37.5% { transform: translateY(-5px); } 75% { opacity: 1; transform: translateY(0); visibility: visible; } 75.1% { opacity: 0; visibility: hidden; } 100% { opacity: 0; visibility: hidden; } }
+    
+    .other-page { min-height: 100vh; width: 100%; padding: 100px 20px; text-align: center; flex-direction: column; justify-content: center; align-items: center; background-image: url('https://i.imgur.com/GhbQLAu.png'); background-repeat: no-repeat; background-position: center; background-size: 200px; background-color: #f9f9f9; }
+    #project { background-image: url('https://i.imgur.com/Z4UO3VN.png'); background-size: cover; background-position: center; background-repeat: no-repeat; }
+    .project-layout { display: flex; gap: 30px; width: 95%; max-width: 1250px; margin: 0 auto; height: 80vh; align-items: stretch; }
+    .project-sidebar { flex: 0 0 270px; background: rgba(15, 15, 20, 0.65); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px; backdrop-filter: blur(12px); box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
+    .project-menu-btn { flex: 1; display: flex; align-items: center; justify-content: flex-start; padding-left: 20px; background: rgba(255, 255, 255, 0.04); color: #d1d5db; font-size: 15px; font-weight: 600; text-transform: uppercase; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; transition: all 0.3s; cursor: pointer !important; }
+    .project-menu-btn:hover { background: rgba(76, 175, 80, 0.2); color: #fff; }
+    .project-menu-btn.active-menu { background: linear-gradient(135deg, rgba(76, 175, 80, 0.8), rgba(56, 142, 60, 0.9)); color: #fff; }
+    .project-content-raw { flex: 1; display: flex; align-items: center; justify-content: center; padding: 10px; position: relative; }
+    .project-grid-panel { display: none; width: 100%; height: 100%; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); gap: 25px; align-items: center; justify-items: center; }
+    .project-grid-panel.active-panel { display: grid; }
+    .project-single-panel { display: none; width: 100%; height: 100%; align-items: center; justify-content: center; position: relative; }
+    .project-single-panel.active-panel { display: flex; }
+    .project-grid-panel img { width: 100%; height: 100%; max-height: 34vh; object-fit: contain; }
+    .project-single-panel img { width: 100%; max-width: 100%; height: auto; aspect-ratio: 1211 / 511; object-fit: cover; border-radius: 16px; }
+    .raw-img-container { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+    .episode-pop { position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%) translateY(15px); background: rgba(10, 10, 15, 0.85); color: #f39c12; padding: 5px 18px; border-radius: 20px; font-weight: 700; font-size: 14px; opacity: 0; transition: all 0.3s ease; }
+    .raw-img-container:hover .episode-pop { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .placeholder-panel { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-size: 20px; background: rgba(0, 0, 0, 0.4); border: 2px dashed rgba(255, 255, 255, 0.2); border-radius: 20px; width: 100%; height: 100%; grid-column: 1 / span 2; grid-row: 1 / span 2; }
+    
+    /* STYLE UNTUK FANART SLIDER MANUAL */
+    .fanart-slider-container { width: 100%; height: 100%; position: relative; overflow: hidden; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); }
+    .fanart-slide { display: none; width: 100%; height: 100%; align-items: center; justify-content: center; }
+    .fanart-slide.active-slide { display: flex; }
+    .fanart-slide img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 16px; }
+    .slider-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.6); color: white; border: none; padding: 15px; font-size: 24px; cursor: pointer !important; z-index: 10; border-radius: 50%; transition: background 0.3s; }
+    .slider-btn:hover { background: #4CAF50; }
+    .prev-btn { left: 10px; }
+    .next-btn { right: 10px; }
+
+    /* STYLE UNTUK COVER SONG LIST */
+    .cover-list-container { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; gap: 15px; padding: 20px; }
+    .cover-item { display: flex; align-items: center; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 18px 25px; text-decoration: none; color: #fff; transition: all 0.3s ease; width: 100%; cursor: pointer !important; }
+    .cover-item:hover { background: rgba(76, 175, 80, 0.2); transform: translateX(10px); border-color: #4CAF50; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .cover-icon { font-size: 24px; margin-right: 20px; color: #4CAF50; transition: transform 0.3s ease; }
+    .cover-item:hover .cover-icon { transform: scale(1.2); }
+    .cover-title { font-size: 16px; font-weight: 600; letter-spacing: 0.5px; }
+
+    #contact { background-image: url('https://i.imgur.com/RZOG7Qa.png'); background-size: cover; background-position: center; align-items: flex-end; padding-right: 80px; }
+    .fullscreen-page { min-height: 100vh; width: 100%; background-color: #111; flex-direction: column; justify-content: center; align-items: center; position: relative; overflow: hidden; }
+    .fullscreen-img { max-width: 100%; max-height: 100vh; object-fit: contain; }
+    #home .fullscreen-img { width: 100vw; height: 100vh; max-width: none; max-height: none; object-fit: cover; object-position: center; }
+    .home-welcome-img-box { position: absolute; bottom: 25px; right: 40px; z-index: 50; max-width: 650px; width: 50vw; }
+    .home-welcome-img-box img { width: 100%; }
+    .content-box { background: rgba(255, 255, 255, 0.9); padding: 40px; border-radius: 15px; max-width: 600px; width: 100%; text-align: left; }
+
+    .qna-form { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+    .qna-form input, .qna-form textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; outline: none; background: rgba(255,255,255,0.8); }
+    .qna-form textarea { resize: vertical; min-height: 80px; }
+    .qna-form button { padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer !important; }
+    .marquee-container { width: 100%; overflow: hidden; background: rgba(0, 0, 0, 0.8); padding: 15px 0; border-radius: 10px; margin-top: 30px; white-space: nowrap; }
+    .marquee-content { display: inline-block; padding-left: 100%; animation: runningText 20s linear infinite; }
+    @keyframes runningText { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+    .qna-item { display: inline-block; margin-right: 60px; color: #fff; font-size: 15px; }
+    .qna-item strong { color: #f39c12; }
+    
+    @media (max-width: 900px) {
+      .project-layout { flex-direction: column; height: auto; align-items: center; }
+      .project-sidebar { width: 100%; height: auto; flex: none; flex-direction: row; flex-wrap: wrap; justify-content: center; }
+      .project-menu-btn { flex: 0 0 45%; padding-left: 0; justify-content: center; text-align: center; }
+      .home-welcome-img-box { max-width: 420px; right: 20px; bottom: 20px; }
+    }
+    @media (max-width: 768px) {
+      #contact { padding-right: 20px; align-items: center; }
+      .menu-toggle { display: block; }
+      .nav-links { display: none; flex-direction: column; position: absolute; top: 70px; left: 0; width: 100%; background: rgba(0, 0, 0, 0.95); padding: 20px; text-align: center; }
+      .nav-links.active { display: flex; }
+      .navbar a { margin: 15px 0; display: block; }
+      #custom-cursor { display: none; }
+      * { cursor: auto !important; }
+      .slider-btn { padding: 10px; font-size: 18px; }
+    }
+    .lang-switch { margin-left: 20px; padding: 5px 10px; background: transparent; color: #fff; border: 1px solid #fff; border-radius: 4px; font-weight: bold; }
+    .lang-switch:hover { background: #fff; color: #000; }
+  </style>
+</head>
+<body>
+
+  <!-- BGM UTAMA -->
+  <audio id="bgMusic" loop autoplay><source src="https://www.dropbox.com/scl/fi/zqz4h84203wwrh10osxgu/bgm-web.mp3?rlkey=u8i9ycased7bil5pyt8qq3c04&st=mviot99e&raw=1" type="audio/mpeg"></audio>
+
+  <!-- SUARA KARAKTER (Source akan diisi dinamis oleh JavaScript berdasarkan bahasa) -->
+  <audio id="foxyVoice" preload="auto"></audio>
+  <audio id="drakeVoice" preload="auto"></audio>
+
+  <img src="https://i.imgur.com/11tGLcH.gif" id="custom-cursor" alt="cursor">
+
+  <nav class="navbar" id="navbar">
+    <div class="nav-brand">
+      <button id="navMusicBtn" class="nav-music-btn" title="Toggle Music">🎵</button>
+      <img src="https://i.imgur.com/wCL8ZJa.png" alt="Logo" class="logo-nav">
+    </div>
+    
+    <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+    <div class="nav-links" id="navLinks">
+      <a href="#" onclick="switchPage('home', event)" class="lang-text" data-id="Beranda" data-en="Home">Beranda</a>
+      <a href="#" onclick="switchPage('about', event)" class="lang-text" data-id="Tentang" data-en="About">Tentang</a>
+      <a href="#" onclick="switchPage('project', event)" class="lang-text" data-id="Proyek" data-en="Project">Proyek</a>
+      <a href="#" onclick="switchPage('contact', event)" class="lang-text" data-id="Kontak" data-en="Contact">Kontak</a>
+      <button class="lang-switch" onclick="toggleLanguage()">EN / ID</button>
+    </div>
+  </nav>
+
+  <section id="home" class="active fullscreen-page">
+    <img src="https://i.imgur.com/9ywvpFC.gif" alt="Welcome to Rei Project" class="fullscreen-img">
+    <div class="home-welcome-img-box">
+      <img src="https://www.dropbox.com/scl/fi/ydq67kfc59hq1vze65a9z/Copy-of-Copy-of-Copy-of-Putih-Kuning-Fotosentrik-Daftar-Musik-Jazz-Youtube-Thumbnail-6.png?rlkey=l2pc02jdv87ikl40n0dm1plg5&st=fjunr0g9&raw=1" alt="Welcome Favoxy">
+    </div>
+  </section>
+
+  <section id="about">
+    <div id="about-main" class="about-view active-view">
+      <div class="about-characters-container">
+        <div class="drake-wrapper" onclick="switchAboutView('sheet-drake')">
+          <img src="https://www.dropbox.com/scl/fi/dxlkt02zk61a38bfsap6h/IMG_0707.PNG?rlkey=8rmlt69rjdzocrfl8ztho7fzh&st=oeikbshc&raw=1" alt="Character Drake" class="about-character-img">
+          <img src="https://i.imgur.com/15FWTDx.png" alt="Drake Signature" class="about-signature">
+        </div>
+        <div class="foxy-wrapper" onclick="switchAboutView('sheet-foxy')">
+          <img src="https://www.dropbox.com/scl/fi/v0anjzkinfdrl5o6r9962/ocis.png?rlkey=b6e2n1pzkpsstgf5f4mowbpz6&st=3lgacu11&raw=1" alt="Character Foxyria" class="about-character-img foxy-char">
+          <img src="https://imgur.com/GhbQLAu.png" alt="Foxy Signature" class="foxy-signature">
+        </div>
+      </div>
+      <img src="https://i.imgur.com/wCL8ZJa.png" alt="Center Logo" class="about-center-logo">
+    </div>
+
+    <div id="sheet-drake" class="about-view sheet-view">
+      <button id="btnBackDrake" class="back-btn lang-text" onclick="switchAboutView('about-main')" data-id="← Kembali" data-en="← Back">← Kembali</button>
+      <div class="sheet-container">
+        <img src="https://www.dropbox.com/scl/fi/7q8lf9233yt2ia10z8xrj/C26_04-Charsheet-A-png.png?rlkey=lzdkpbdb22ta4hjqjr6qrzur1&st=l3ekwg3j&raw=1" alt="Drake Character Sheet" class="sheet-img">
+        <div class="comic-bubble drake-bubble drake-bubble-1">
+          <strong>Drake:</strong><span class="bubble-icon">💬</span>
+          <span class="lang-text" data-id="Dengarkan derap langkahku, aku adalah Drake, pengawas setia yang berdiri di garis terdepan." data-en="Hear my footsteps, I am Drake, the loyal watcher standing on the frontlines.">Dengarkan derap langkahku, aku adalah Drake, pengawas setia yang berdiri di garis terdepan.</span>
+        </div>
+        <div class="comic-bubble drake-bubble drake-bubble-2">
+          <p><strong>Nickname: Cocot</strong><strong>Birthday: 21/12</strong></p>
+        </div>
+        <div class="comic-bubble drake-bubble drake-bubble-3">
+          <strong>Bio:</strong><span class="bubble-icon">🐺</span>
+          <span class="lang-text" data-id="Drake C. Latransis (Cocot), adalah maskot Favoxy, seorang pria berambut ungu yang menyadari jati dirinya setelah bertemu Poci." data-en="Drake C. Latransis (Cocot) is the Favoxy mascot, a purple-haired man who realized his true self after meeting Poci.">Drake C. Latransis (Cocot), adalah maskot Favoxy, seorang pria berambut ungu yang menyadari jati dirinya setelah bertemu Poci.</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="sheet-foxy" class="about-view sheet-view">
+      <button id="btnBackFoxy" class="back-btn lang-text" onclick="switchAboutView('about-main')" data-id="← Kembali" data-en="← Back">← Kembali</button>
+      <div class="sheet-container">
+        <img src="https://imgur.com/Uph24c1.png" alt="Foxyria Character Sheet" class="sheet-img">
+        <div class="comic-bubble foxy-bubble-1">
+          <strong>Foxyria:</strong><span class="bubble-icon">💬</span>
+          <span class="lang-text" data-id="Apakah kau mengingatku? Namaku Foxyria Rosetta, rubah mesir yang mencari mu, melewati ruang dan waktu." data-en="Do you remember me? My name is Foxyria Rosetta, the Egyptian fox searching for you, across space and time.">Apakah kau mengingatku? Namaku Foxyria Rosetta, rubah mesir yang mencari mu, melewati ruang dan waktu.</span>
+        </div>
+        <div class="comic-bubble foxy-bubble-2">
+          <p><strong>Nickname: Poci</strong><strong>Birthday: 10/04</strong></p>
+        </div>
+        <div class="comic-bubble foxy-bubble-3">
+          <strong>Bio:</strong><span class="bubble-icon">🦊</span>
+          <span class="lang-text" data-id="Foxyria Rosetta (Poci), adalah wanita rubah reinkarnasi mesir, yang hidup kembali dan mencari jejak sang Pharaoh di masa kini." data-en="Foxyria Rosetta (Poci) is an Egyptian reincarnated fox woman, who came back to life and searches for the traces of the Pharaoh in the present day.">Foxyria Rosetta (Poci), adalah wanita rubah reinkarnasi mesir, yang hidup kembali dan mencari jejak sang Pharaoh di masa kini.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="project" class="other-page">
+    <div class="project-layout">
+      <div class="project-sidebar">
+        <button class="project-menu-btn active-menu lang-text" onclick="switchProjectTab('lore', this)" data-id="Lore Song" data-en="Lore Song">Lore Song</button>
+        <button class="project-menu-btn lang-text" onclick="switchProjectTab('cover', this)" data-id="Cover Song" data-en="Cover Song">Cover Song</button>
+        <button class="project-menu-btn lang-text" onclick="switchProjectTab('babu', this)" data-id="My Babu" data-en="My Babu">My Babu</button>
+        <button class="project-menu-btn lang-text" onclick="switchProjectTab('merch', this)" data-id="Merch" data-en="Merch">Merch</button>
+        <button class="project-menu-btn lang-text" onclick="switchProjectTab('fanart', this)" data-id="Fanart" data-en="Fanart">Fanart</button>
+      </div>
+      <div class="project-content-raw">
+        
+        <div id="panel-lore" class="project-grid-panel active-panel">
+          <a href="https://youtu.be/ZLU9sdEiQkw" target="_blank" class="raw-img-container"><img src="https://lh3.googleusercontent.com/d/1UU-ixmJ0cw4gZRaGv7L4-pbEKU7Usqxj" alt="Episode 00"><div class="episode-pop lang-text" data-id="Episode 00" data-en="Episode 00">Episode 00</div></a>
+          <a href="https://youtu.be/qWWN5vOkT8o" target="_blank" class="raw-img-container"><img src="https://lh3.googleusercontent.com/d/1QPIZOgUYfJyJI4sUHvtUSVaABGM46OVD" alt="Episode 01"><div class="episode-pop lang-text" data-id="Episode 01" data-en="Episode 01">Episode 01</div></a>
+          <a href="https://youtu.be/wmESX22_XJg" target="_blank" class="raw-img-container"><img src="https://lh3.googleusercontent.com/d/1OeVAHryC3L1jEHMT-vqOT6pOVOFZveOU" alt="Episode 02"><div class="episode-pop lang-text" data-id="Episode 02" data-en="Episode 02">Episode 02</div></a>
+          <a href="https://youtu.be/ejMZYs3JEkw" target="_blank" class="raw-img-container"><img src="https://lh3.googleusercontent.com/d/1N3bl9cNzyxSO4hhA6fh8c_389Mja1CND" alt="Episode 03"><div class="episode-pop lang-text" data-id="Episode 03" data-en="Episode 03">Episode 03</div></a>
+        </div>
+        
+        <div id="panel-cover" class="project-single-panel">
+          <div class="cover-list-container">
+            <a href="https://youtu.be/-4Noh78CYBg" target="_blank" class="cover-item">
+              <span class="cover-icon">▶</span>
+              <span class="cover-title">Nasti EP - Just Another Inch Higher</span>
+            </a>
+            <a href="https://youtu.be/D3zbVumZSUw" target="_blank" class="cover-item">
+              <span class="cover-icon">▶</span>
+              <span class="cover-title">ギルベルタEP 「Snap Shot」 (JP lyric unofficial)</span>
+            </a>
+            <a href="https://youtu.be/9rqHzCzvnOI" target="_blank" class="cover-item">
+              <span class="cover-icon">▶</span>
+              <span class="cover-title">【FoxyValko】's Cover : Lepas L[A]ndas</span>
+            </a>
+          </div>
+        </div>
+
+        <div id="panel-babu" class="project-single-panel"><img src="https://i.imgur.com/MJax9tJ.png" alt="My Babu"></div>
+        <div id="panel-merch" class="project-grid-panel"><div class="placeholder-panel">Merch Content Coming Soon</div></div>
+        
+        <div id="panel-fanart" class="project-single-panel">
+          <div class="fanart-slider-container" id="fanartSliderContainer">
+             <div class="fanart-slide active-slide">
+                 <img src="https://lh3.googleusercontent.com/d/196lkCZGG_tWRimrrzoWAJYoXlErTgtpU" alt="Fanart 1">
+             </div>
+             <div class="fanart-slide">
+                 <img src="https://lh3.googleusercontent.com/d/1vbqkeTkWL_HAHQZiC1ervGSCnfmKScgk" alt="Fanart 2">
+             </div>
+             <div class="fanart-slide">
+                 <img src="https://lh3.googleusercontent.com/d/1L2IFQszEDMja_6a2lCV_ka-c9B-7yptv" alt="Fanart 3">
+             </div>
+             <div class="fanart-slide">
+                 <img src="https://lh3.googleusercontent.com/d/1bfqlInbTB1mCIePDHidpmZzGRHp2LAnI" alt="Fanart 4">
+             </div>
+             <div class="fanart-slide">
+                 <img src="https://lh3.googleusercontent.com/d/19FkZM52NorR3iM7w-l3y28UfDkQvb3OL" alt="Fanart 5">
+             </div>
+             <button class="slider-btn prev-btn" onclick="changeSlide(-1)">&#10094;</button>
+             <button class="slider-btn next-btn" onclick="changeSlide(1)">&#10095;</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" class="other-page">
+    <div class="content-box">
+      <h2 class="lang-text" data-id="Tanya & Jawab (QnA)" data-en="Questions & Answers">Tanya & Jawab (QnA)</h2>
+      <p class="lang-text" data-id="Kirimkan pertanyaanmu, dan lihat 5 pertanyaan terbaru di bawah!" data-en="Send your questions and see the 5 latest below!">Kirimkan pertanyaanmu, dan lihat 5 pertanyaan terbaru di bawah!</p>
+      <form id="qnaForm" class="qna-form">
+        <input type="text" id="qnaNama" name="nama" placeholder="Nama Anda / Your Name" required>
+        <input type="email" id="qnaEmail" name="email" placeholder="Email Aktif (Privasi Aman) / Active Email" required>
+        <textarea id="qnaPertanyaan" name="pertanyaan" placeholder="Tulis pertanyaanmu di sini... / Write your question..." required></textarea>
+        <button type="submit" id="btnSubmitQna" class="lang-text" data-id="Kirim Pertanyaan" data-en="Send Question">Kirim Pertanyaan</button>
+      </form>
+      <div class="marquee-container"><div class="marquee-content" id="qnaMarquee"><span class="qna-item">Memuat 5 pertanyaan terbaru...</span></div></div>
+    </div>
+  </section>
+
+  <script>
+    // =========================================================================
+    // API LINK GOOGLE APPS SCRIPT
+    // =========================================================================
+    const API_URL = "https://script.google.com/macros/s/AKfycbxmgq4StyIcCiNmdXLvNw6X7jn8u7KGsCbB5omsgkbskHhyYPwgCh9WKllt9PboLn0FOg/exec";
+
+
+    const cursor = document.getElementById('custom-cursor');
+    const navbar = document.getElementById('navbar');
+    
+    document.addEventListener('mousemove', (e) => {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top = e.clientY + 'px';
+      
+      if (window.innerWidth > 768) {
+        if (e.clientY <= 100) {
+            navbar.classList.remove('navbar-hidden');
+        } else {
+            navbar.classList.add('navbar-hidden');
+        }
+      } else {
+        navbar.classList.remove('navbar-hidden');
+      }
+    });
+
+    const bgMusic = document.getElementById('bgMusic');
+    const foxyVoice = document.getElementById('foxyVoice');
+    const drakeVoice = document.getElementById('drakeVoice');
+    const navMusicBtn = document.getElementById('navMusicBtn');
+    const btnBackFoxy = document.getElementById('btnBackFoxy');
+    const btnBackDrake = document.getElementById('btnBackDrake');
+    
+    // Variabel bahasa default
+    let currentLang = 'id'; 
+    
+    // Objek penyimpan link audio berdasarkan bahasa
+    const audioLinks = {
+        id: {
+            foxy: "https://www.dropbox.com/scl/fi/ntncwquf39vey2e6ida0u/pocis-en.mp3?rlkey=z5a38ndt9ukwrtv6oneycjxyr&st=ekn36tye&raw=1",
+            drake: "https://www.dropbox.com/scl/fi/jw4uthki9o30inqplnwkb/drake-cocot-2.mp3?rlkey=53u0h3ypz60ywqbq58wu1ocp1&st=e6fbc1r8&raw=1"
+        },
+        en: {
+            foxy: "https://www.dropbox.com/scl/fi/3g969s4oi2mde03o2d949/pocis-indo.mp3?rlkey=uabj8scuc43zm9mcag1tnjdgk&st=g3vl9eoz&raw=1",
+            drake: "https://www.dropbox.com/scl/fi/rzul8k26g9z79i0titlst/drake-EN.mp3?rlkey=swvd415ibov0v1vovyg55s7ww&st=n7c8srk5&raw=1"
+        }
+    };
+    
+    window.addEventListener('DOMContentLoaded', () => {
+      const playPromise = bgMusic.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          navMusicBtn.innerHTML = '🎵';
+        }).catch((error) => {
+          console.log("Autoplay diblokir oleh browser.");
+          navMusicBtn.innerHTML = '🔇';
+        });
+      }
+    });
+
+    navMusicBtn.addEventListener('click', () => {
+      if (bgMusic.paused) {
+        bgMusic.play().then(() => {
+          navMusicBtn.innerHTML = '🎵';
+        }).catch(err => console.log("Gagal memutar audio: ", err));
+      } else {
+        bgMusic.pause();
+        navMusicBtn.innerHTML = '🔇';
+      }
+    });
+    
+    function playFoxyVoice() {
+        bgMusic.pause();
+        navMusicBtn.innerHTML = '🔇';
+        navbar.classList.add('disabled-nav');
+        btnBackFoxy.classList.add('disabled-nav');
+        
+        foxyVoice.src = audioLinks[currentLang].foxy;
+        foxyVoice.play().catch(err => {
+            console.log("Suara Foxyria gagal diputar:", err);
+            navbar.classList.remove('disabled-nav');
+            btnBackFoxy.classList.remove('disabled-nav');
+        });
+    }
+
+    foxyVoice.addEventListener('ended', () => {
+        navbar.classList.remove('disabled-nav');
+        btnBackFoxy.classList.remove('disabled-nav');
+        bgMusic.play().then(() => {
+            navMusicBtn.innerHTML = '🎵';
+        }).catch(err => console.log(err));
+    });
+
+    function playDrakeVoice() {
+        bgMusic.pause();
+        navMusicBtn.innerHTML = '🔇';
+        navbar.classList.add('disabled-nav');
+        btnBackDrake.classList.add('disabled-nav');
+        
+        drakeVoice.src = audioLinks[currentLang].drake;
+        drakeVoice.play().catch(err => {
+            console.log("Suara Drake gagal diputar:", err);
+            navbar.classList.remove('disabled-nav');
+            btnBackDrake.classList.remove('disabled-nav');
+        });
+    }
+
+    drakeVoice.addEventListener('ended', () => {
+        navbar.classList.remove('disabled-nav');
+        btnBackDrake.classList.remove('disabled-nav');
+        bgMusic.play().then(() => {
+            navMusicBtn.innerHTML = '🎵';
+        }).catch(err => console.log(err));
+    });
+    
+    function switchPage(pageId, event) {
+      if(event) event.preventDefault();
+      if(navbar.classList.contains('disabled-nav')) return;
+
+      document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+      document.getElementById('navLinks').classList.remove('active');
+      navbar.classList.remove('navbar-hidden');
+      
+      if(pageId === 'about') { switchAboutView('about-main'); }
+    }
+    
+    function switchAboutView(viewId) {
+      document.querySelectorAll('.about-view').forEach(view => { view.classList.remove('active-view'); });
+      document.getElementById(viewId).classList.add('active-view');
+      
+      if(viewId === 'sheet-foxy') {
+          playFoxyVoice();
+      } else if (viewId === 'sheet-drake') {
+          playDrakeVoice();
+      }
+    }
+
+    function toggleMenu() { document.getElementById('navLinks').classList.toggle('active'); }
+    
+    function switchProjectTab(tabName, btnElement) {
+      document.querySelectorAll('.project-grid-panel, .project-single-panel').forEach(panel => { panel.classList.remove('active-panel'); });
+      document.querySelectorAll('.project-menu-btn').forEach(btn => { btn.classList.remove('active-menu'); });
+      document.getElementById('panel-' + tabName).classList.add('active-panel');
+      btnElement.classList.add('active-menu');
+    }
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'en' ? 'id' : 'en';
+      document.querySelectorAll('.lang-text').forEach(el => {
+        if(el.tagName.toLowerCase() !== 'img') { 
+            el.innerHTML = currentLang === 'id' ? el.getAttribute('data-id') : el.getAttribute('data-en'); 
+        }
+      });
+    }
+
+    // ================================================================
+    // SISTEM QNA VIA FETCH API (UNTUK GITHUB)
+    // ================================================================
+    const qnaForm = document.getElementById('qnaForm');
+    const qnaMarquee = document.getElementById('qnaMarquee');
+    const btnSubmit = document.getElementById('btnSubmitQna');
+    
+    function loadRecentQnA() {
+      if (!API_URL || API_URL === "MASUKKAN_LINK_WEB_APP_ANDA_DISINI") return;
+      
+      fetch(API_URL)
+        .then(response => response.json())
+        .then(data => {
+          if (!data || data.length === 0) { 
+            qnaMarquee.innerHTML = '<span class="qna-item">Belum ada pertanyaan. Jadilah yang pertama!</span>'; 
+            return; 
+          }
+          let htmlKonten = ''; 
+          data.forEach(item => { 
+            htmlKonten += `<span class="qna-item"><strong>${item.nama}</strong>: "${item.pertanyaan}"</span>`; 
+          });
+          qnaMarquee.innerHTML = htmlKonten;
+        })
+        .catch(err => console.error("Gagal memuat QnA:", err));
+    }
+    loadRecentQnA();
+    
+    if (qnaForm) {
+      qnaForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!API_URL || API_URL === "MASUKKAN_LINK_WEB_APP_ANDA_DISINI") { 
+            alert('Ganti API_URL terlebih dahulu dengan link Web App Google Apps Script Anda!'); 
+            return; 
+        }
+        
+        const btnTextAwal = btnSubmit.innerHTML; 
+        btnSubmit.innerHTML = 'Mengirim...'; 
+        btnSubmit.disabled = true;
+        
+        const payload = {
+          nama: document.getElementById('qnaNama').value,
+          email: document.getElementById('qnaEmail').value,
+          pertanyaan: document.getElementById('qnaPertanyaan').value
+        };
+
+        fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8',
+          },
+          body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(result => {
+          if(result.status === "success") { 
+            alert('Pertanyaan berhasil dikirim!'); 
+            qnaForm.reset(); 
+            loadRecentQnA(); 
+          } else { 
+            alert('Gagal menyimpan: ' + result.message); 
+          }
+        })
+        .catch(err => {
+          // Fallback jika browser memblokir respon JSON (CORS) tapi data berhasil masuk ke spreadsheet
+          alert('Pertanyaan terkirim!');
+          qnaForm.reset(); 
+          setTimeout(loadRecentQnA, 2000); 
+        })
+        .finally(() => {
+          btnSubmit.innerHTML = btnTextAwal; 
+          btnSubmit.disabled = false;
+        });
+      });
+    }
+
+    let currentSlideIndex = 0;
+    function changeSlide(direction) {
+        const slides = document.querySelectorAll('.fanart-slide');
+        const totalSlides = slides.length;
+        if (totalSlides === 0) return;
+        slides[currentSlideIndex].classList.remove('active-slide');
+        currentSlideIndex += direction;
+        if (currentSlideIndex >= totalSlides) {
+            currentSlideIndex = 0;
+        } else if (currentSlideIndex < 0) {
+            currentSlideIndex = totalSlides - 1;
+        }
+        slides[currentSlideIndex].classList.add('active-slide');
+    }
+  </script>
+</body>
+</html>
